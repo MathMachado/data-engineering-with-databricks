@@ -61,7 +61,10 @@ class DataFactory:
         self.source = f"{DA.paths.data_source}/tracker/streaming/"
         self.userdir = DA.paths.data_landing_location
         try:
-            self.curr_mo = 1 + int(max([x[1].split(".")[0] for x in dbutils.fs.ls(self.userdir)]))
+            self.curr_mo = 1 + int(
+                max(x[1].split(".")[0] for x in dbutils.fs.ls(self.userdir))
+            )
+
         except:
             self.curr_mo = 1
     

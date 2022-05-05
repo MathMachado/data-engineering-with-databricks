@@ -19,7 +19,8 @@ class Paths():
 
     def print(self, padding="  "):
         max_key_len = 0
-        for key in self.__dict__: max_key_len = len(key) if len(key) > max_key_len else max_key_len
+        for key in self.__dict__:
+            max_key_len = max(len(key), max_key_len)
         for key in self.__dict__:
             label = f"{padding}DA.paths.{key}:"
             print(label.ljust(max_key_len+13) + DA.paths.__dict__[key])
@@ -71,10 +72,15 @@ class DBAcademyHelper():
             try: stream.awaitTermination()
             except: pass # Bury any exceptions
 
-        if spark.sql(f"SHOW DATABASES").filter(f"databaseName == '{self.db_name}'").count() == 1:
+        if (
+            spark.sql("SHOW DATABASES")
+            .filter(f"databaseName == '{self.db_name}'")
+            .count()
+            == 1
+        ):
             print(f"Dropping the database \"{self.db_name}\"")
             spark.sql(f"DROP DATABASE {self.db_name} CASCADE")
-            
+
         if self.paths.exists(self.paths.working_dir):
             print(f"Removing the working directory \"{self.paths.working_dir}\"")
             dbutils.fs.rm(self.paths.working_dir, True)
@@ -114,7 +120,7 @@ class DBAcademyHelper():
 dbutils.widgets.text("lesson", "missing")
 lesson = dbutils.widgets.get("lesson")
 if lesson == "none": lesson = None
-assert lesson != "missing", f"The lesson must be passed to the DBAcademyHelper"
+assert lesson != "missing", "The lesson must be passed to the DBAcademyHelper"
 
 DA = DBAcademyHelper(lesson)
 
@@ -192,7 +198,7 @@ def load_eltwss_external_tables():
 
     import time
     start = int(time.time())
-    print(f"Creating the users table", end="...")
+    print("Creating the users table", end="...")
 
     # REFACTORING - Making lesson-specific copy
     dbutils.fs.cp(f"{DA.paths.datasets}/raw/users-historical", 
@@ -219,20 +225,20 @@ def load_eltwss_external_tables():
 def create_eltwss_users_update():
     import time
     start = int(time.time())
-    print(f"Creating the users_dirty table", end="...")
+    print("Creating the users_dirty table", end="...")
 
     # REFACTORING - Making lesson-specific copy
     dbutils.fs.cp(f"{DA.paths.datasets}/raw/users-30m", 
                   f"{DA.paths.working_dir}/users-30m", True)
-    
+
     spark.sql(f"""
         CREATE OR REPLACE TABLE users_dirty AS
         SELECT *, current_timestamp() updated 
         FROM parquet.`{DA.paths.working_dir}/users-30m`
     """)
-    
+
     spark.sql("INSERT INTO users_dirty VALUES (NULL, NULL, NULL, NULL), (NULL, NULL, NULL, NULL), (NULL, NULL, NULL, NULL)")
-    
+
     total = spark.read.table("users_dirty").count()
     print(f"({int(time.time())-start} seconds / {total:,} records)")
 
@@ -240,10 +246,13 @@ def create_eltwss_users_update():
 
 class DltDataFactory:
     def __init__(self):
-        self.source = f"/mnt/training/healthcare/tracker/streaming"
+        self.source = "/mnt/training/healthcare/tracker/streaming"
         self.userdir = f"{DA.paths.working_dir}/source/tracker"
         try:
-            self.curr_mo = 1 + int(max([x[1].split(".")[0] for x in dbutils.fs.ls(self.userdir)]))
+            self.curr_mo = 1 + int(
+                max(x[1].split(".")[0] for x in dbutils.fs.ls(self.userdir))
+            )
+
         except:
             self.curr_mo = 1
     
