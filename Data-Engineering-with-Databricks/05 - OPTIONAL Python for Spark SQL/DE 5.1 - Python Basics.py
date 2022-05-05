@@ -36,6 +36,7 @@
 
 "This is a string"
 
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -162,7 +163,7 @@ print(my_string)
 
 # COMMAND ----------
 
-print("This is a new string and " + my_string)
+print(f"This is a new string and {my_string}")
 
 # COMMAND ----------
 
@@ -227,7 +228,7 @@ print_string(my_string)
 # COMMAND ----------
 
 def return_new_string(string_arg):
-    return "The string passed to this function was " + string_arg
+    return f"The string passed to this function was {string_arg}"
 
 # COMMAND ----------
 
